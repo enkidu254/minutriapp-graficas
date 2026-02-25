@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Macros</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: transparent;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .container {
+    width: 100%;
+    max-width: 320px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .chart-wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+  }
+  .center-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    pointer-events: none;
+  }
+  .center-label .calorias-num {
+    font-size: 22px;
+    font-weight: bold;
+    color: #1A1A1A;
+    line-height: 1;
+  }
+  .center-label .calorias-text {
+    font-size: 11px;
+    color: #888;
+    margin-top: 2px;
+  }
+  .leyenda {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    margin-top: 16px;
+  }
+  .leyenda-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .leyenda-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+  }
+  .leyenda-valor {
+    font-size: 13px;
+    font-weight: bold;
+    color: #1A1A1A;
+  }
+  .leyenda-nombre {
+    font-size: 10px;
+    color: #888;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="chart-wrapper">
+    <canvas id="macroChart"></canvas>
+    <div class="center-label">
+      <div class="calorias-num" id="calLabel">0</div>
+      <div class="calorias-text">kcal</div>
+    </div>
+  </div>
+
+  <div class="leyenda">
+    <div class="leyenda-item">
+      <div class="leyenda-color" style="background:#4A90D9"></div>
+      <div class="leyenda-valor" id="protVal">0g</div>
+      <div class="leyenda-nombre">Proteínas</div>
+    </div>
+    <div class="leyenda-item">
+      <div class="leyenda-color" style="background:#F5A623"></div>
+      <div class="leyenda-valor" id="carbVal">0g</div>
+      <div class="leyenda-nombre">Carbohidratos</div>
+    </div>
+    <div class="leyenda-item">
+      <div class="leyenda-color" style="background:#E74C3C"></div>
+      <div class="leyenda-valor" id="fatVal">0g</div>
+      <div class="leyenda-nombre">Grasas</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ── Leer parámetros de la URL ──
+  // Thunkable pasa los valores así:
+  // data:text/html,...?prot=50&carb=200&fat=60&cal=1500
+  const params = new URLSearchParams(window.location.search);
+  const prot = parseFloat(params.get('prot')) || 0;
+  const carb = parseFloat(params.get('carb')) || 0;
+  const fat  = parseFloat(params.get('fat'))  || 0;
+  const cal  = parseFloat(params.get('cal'))  || 0;
+
+  // Actualizar etiquetas
+  document.getElementById('calLabel').textContent = Math.round(cal);
+  document.getElementById('protVal').textContent  = Math.round(prot) + 'g';
+  document.getElementById('carbVal').textContent  = Math.round(carb) + 'g';
+  document.getElementById('fatVal').textContent   = Math.round(fat)  + 'g';
+
+  // Si todos son 0, mostrar gráfica vacía gris
+  const total = prot + carb + fat;
+  const data  = total > 0 ? [prot, carb, fat] : [1, 1, 1];
+  const colors = total > 0
+    ? ['#4A90D9', '#F5A623', '#E74C3C']
+    : ['#E0E0E0', '#E0E0E0', '#E0E0E0'];
+
+  // Crear gráfica de dona
+  const ctx = document.getElementById('macroChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Proteínas', 'Carbohidratos', 'Grasas'],
+      datasets: [{
+        data: data,
+        backgroundColor: colors,
+        borderWidth: 0,
+        hoverOffset: 4
+      }]
+    },
+    options: {
+      cutout: '70%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              return context.label + ': ' + Math.round(context.raw) + 'g';
+            }
+          }
+        }
+      },
+      animation: { animateRotate: true, duration: 800 }
+    }
+  });
+</script>
+
+</body>
+</html>
